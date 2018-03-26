@@ -15,7 +15,6 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class SteelGrade implements Serializable {
 
     private static final long serialVersionUID = 2602749877361371758L;

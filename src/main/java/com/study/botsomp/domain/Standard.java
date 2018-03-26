@@ -15,7 +15,6 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Standard implements Serializable {
 
     private static final long serialVersionUID = -6153922811400685048L;

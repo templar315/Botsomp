@@ -12,7 +12,6 @@ import java.util.List;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class StandardDTO implements Serializable {
 
     private static final long serialVersionUID = -2158372517247381493L;

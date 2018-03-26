@@ -4,7 +4,6 @@ import com.study.botsomp.dto.ContactDetailsDTO;
 import com.study.botsomp.service.ContactDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,125 +12,167 @@ import java.util.List;
 @RestController
 @RequestMapping("/contacts")
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-
 public class ContactDetailsController {
 
     private final ContactDetailsService contactDetailsService;
+/*
+    private final ProductService productService;
 
-    @PostMapping("/add")
-    public @ResponseBody ResponseEntity addContactDetails(@RequestBody ContactDetailsDTO contactDetailsDTO) {
+    private final StandardService standardService;
+
+    private final ManufacturerService manufacturerService;
+
+    private final SteelGradeService steelGradeService;
+*/
+    @PostMapping
+    public ResponseEntity<ContactDetailsDTO> add(@RequestBody ContactDetailsDTO contactDetailsDTO) {
         try {
-            if(contactDetailsDTO != null) {
-                boolean check = true;
-
-                for (ContactDetailsDTO contactDetails : contactDetailsService.findAll()) {
-                    if (contactDetails.getManufacturer() == contactDetailsDTO.getManufacturer()) check = false;
-                }
-
-                if (!contactDetailsService.existsById(contactDetailsDTO.getId())
-                        && contactDetailsDTO.getManufacturer() > 0L
-                        && check) {
-
-                    contactDetailsService.addOrUpdate(contactDetailsDTO);
-
-                    return new ResponseEntity<>("Contact details have been added", HttpStatus.CREATED);
-                } else return new ResponseEntity<>("Contact details already exists", HttpStatus.BAD_REQUEST);
-            } else return new ResponseEntity<>("Missing request body", HttpStatus.BAD_REQUEST);
-        } catch(Exception ex) {
-            return new ResponseEntity<>("Error saving", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.ok(contactDetailsService.add(contactDetailsDTO));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @PutMapping("/update/{id}")
-    public @ResponseBody ResponseEntity updateContactDetails(@PathVariable long id,
-                                                             @RequestBody ContactDetailsDTO contactDetailsDTO) {
+    @PutMapping
+    public ResponseEntity<ContactDetailsDTO> update(@RequestBody ContactDetailsDTO contactDetailsDTO) {
         try {
-            if(id > 0L && contactDetailsDTO != null) {
-                if(contactDetailsService.existsById(id)) {
-                    if (contactDetailsDTO.getManufacturer() == contactDetailsService.getOne(id).getManufacturer()) {
-
-                        contactDetailsDTO.setId(id);
-                        contactDetailsService.addOrUpdate(contactDetailsDTO);
-
-                        return new ResponseEntity<>("Contact details has been changed", HttpStatus.ACCEPTED);
-                    } else return new ResponseEntity<>("Can not change contact information", HttpStatus.NOT_MODIFIED);
-                } else return new ResponseEntity<>("Can not found contact details", HttpStatus.NOT_FOUND);
-            } else return new ResponseEntity<>("Missing path variable or request body", HttpStatus.BAD_REQUEST);
-        } catch(Exception ex) {
-            return new ResponseEntity<>("Update error", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.ok(contactDetailsService.update(contactDetailsDTO));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public @ResponseBody ResponseEntity deleteContactDetails(@PathVariable long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity delete(@PathVariable long id) {
         try {
-            if(id > 0L) {
-                if (contactDetailsService.existsById(id)) {
-
-                    contactDetailsService.delete(id);
-
-                    return new ResponseEntity<>("Deletion request accepted", HttpStatus.ACCEPTED);
-                } else return new ResponseEntity<>("Contact details not found", HttpStatus.NOT_FOUND);
-            } else return new ResponseEntity<>("Missing path variable", HttpStatus.BAD_REQUEST);
-        } catch(Exception ex) {
-            return new ResponseEntity<>("Deletion error", HttpStatus.INTERNAL_SERVER_ERROR);
+            contactDetailsService.delete(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @GetMapping("/get/{id}")
-    public ResponseEntity<ContactDetailsDTO> getOneContactDetails(@PathVariable long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ContactDetailsDTO> getOne(@PathVariable long id) {
         try {
-            if(id > 0L) {
-                if(contactDetailsService.existsById(id)) {
-                    return new ResponseEntity<>(contactDetailsService.getOne(id), HttpStatus.OK);
-                } else return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            } else return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } catch(Exception ex) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.ok(contactDetailsService.getOne(id));
+        } catch (Exception ex) {
+            return ResponseEntity.notFound().build();
         }
     }
 
-    @GetMapping("/exists/{id}")
-    public ResponseEntity<Boolean> existsContactDetailsById(@PathVariable long id) {
-        try {
-            if(id > 0L) {
-                return new ResponseEntity<>(contactDetailsService.existsById(id), HttpStatus.OK);
-            } else return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } catch(Exception ex) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/get/all")
+    @GetMapping
     public List<ContactDetailsDTO> findAll() {
         return contactDetailsService.findAll();
     }
 
-    @GetMapping("/get/manufacturer/{id}")
-    public ResponseEntity<ContactDetailsDTO> findContactDetailsByManufacturerId(@PathVariable long id) {
-        try {
-            if(id > 0L) {
-                if(contactDetailsService.existsById(id)) {
-                    return new ResponseEntity<>(contactDetailsService.findByManufacturerId(id), HttpStatus.OK);
-                } else return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            } else return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } catch(Exception ex) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 
-    @GetMapping("/get/manufacturer/{name}")
-    public ResponseEntity<ContactDetailsDTO> findContactDetailsByManufacturerName(@PathVariable String name) {
-        try {
-            if(!name.isEmpty()) {
-                ContactDetailsDTO contactDetailsDTO = contactDetailsService.findByManufacturerName(name);
-                if(contactDetailsDTO != null) {
-                    return new ResponseEntity<>(contactDetailsDTO, HttpStatus.OK);
-                } else return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            } else return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } catch(Exception ex) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
 
+/*
+    @GetMapping("/start")
+    public ContactDetailsDTO start() {
+
+        StandardDTO standard1 = StandardDTO.builder()
+                .designation("GOST8240-89")
+                .build();
+        standardService.addOrUpdate(standard1);
+        StandardDTO standard2 = StandardDTO.builder()
+                .designation("GOST8509-93")
+                .build();
+        standardService.addOrUpdate(standard2);
+        StandardDTO standard3 = StandardDTO.builder()
+                .designation("GOST380-2005")
+                .build();
+        standardService.addOrUpdate(standard3);
+        StandardDTO standard4 = StandardDTO.builder()
+                .designation("GOST5058-65")
+                .build();
+        standardService.addOrUpdate(standard4);
+
+        SteelGradeDTO steelGrade1 = SteelGradeDTO.builder()
+                .designation("St5sp")
+                .gradeStandard("GOST380-2005")
+                .build();
+        steelGradeService.addOrUpdate(steelGrade1);
+
+        SteelGradeDTO steelGrade2 = SteelGradeDTO.builder()
+                .designation("St3sp")
+                .gradeStandard("GOST380-2005")
+                .build();
+        steelGradeService.addOrUpdate(steelGrade2);
+
+        SteelGradeDTO steelGrade3 = SteelGradeDTO.builder()
+                .designation("14G")
+                .gradeStandard("GOST5058-65")
+                .build();
+        steelGradeService.addOrUpdate(steelGrade3);
+
+        SteelGradeDTO steelGrade4 = SteelGradeDTO.builder()
+                .designation("35GS")
+                .gradeStandard("GOST5058-65")
+                .build();
+        steelGradeService.addOrUpdate(steelGrade4);
+
+        ProductDTO product1 = ProductDTO.builder()
+                .name("Steel hot-rolled channel #5")
+                .type("Channel bars")
+                .steelGrade("St5sp")
+                .standard("GOST8240-89")
+                .build();
+        productService.addOrUpdate(product1);
+
+        ProductDTO product2 = ProductDTO.builder()
+                .name("Steel hot-rolled channel #5")
+                .type("Channel bars")
+                .steelGrade("St3sp")
+                .standard("GOST8240-89")
+                .build();
+        productService.addOrUpdate(product2);
+
+        ProductDTO product3 = ProductDTO.builder()
+                .name("Corner steel hot-rolled equipotential #3")
+                .type("Corners")
+                .steelGrade("14G")
+                .standard("GOST8509-93")
+                .build();
+        productService.addOrUpdate(product3);
+
+        ProductDTO product4 = ProductDTO.builder()
+                .name("Corner steel hot-rolled equipotential #3")
+                .type("Corners")
+                .steelGrade("35GS")
+                .standard("GOST8509-93")
+                .build();
+        productService.addOrUpdate(product4);
+
+        List<Long> productList1 = new ArrayList<>();
+        productList1.add(productService
+                .findByNameAndSteelGradeDesignation("Steel hot-rolled channel #5", "St5sp")
+                .getId());
+        productList1.add(productService
+                .findByNameAndSteelGradeDesignation("Corner steel hot-rolled equipotential #3", "14G")
+                .getId());
+
+        ManufacturerDTO manufacturer = ManufacturerDTO.builder()
+                .name("Azovstal")
+                .country("Ukraine")
+                .region("Donetsk region")
+                .city("Mariupol")
+                .address("Str. Unclearly, 100")
+                .manufacturedProducts(productList1)
+                .build();
+        manufacturerService.addOrUpdate(manufacturer);
+
+        ContactDetailsDTO contactDetails = ContactDetailsDTO.builder()
+                .firstName("Vladimir")
+                .lastName("Drobyshev")
+                .position("Director of Commercial Affairs")
+                .phone(380998541212L)
+                .email("azovstal@com.ua")
+                .manufacturer(manufacturerService.findByName("Azovstal").getId())
+                .build();
+        contactDetailsService.addOrUpdate(contactDetails);
+        return contactDetailsService.findByManufacturerName("Azovstal");
+    }
+    */
 }

@@ -14,7 +14,6 @@ import java.io.Serializable;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class ContactDetails implements Serializable {
 
     private static final long serialVersionUID = -7286371480438723163L;

@@ -11,7 +11,6 @@ import java.io.Serializable;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class ContactDetailsDTO implements Serializable {
 
     private static final long serialVersionUID = -3554721242569543640L;

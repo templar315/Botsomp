@@ -15,7 +15,6 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Product implements Serializable {
 
     private static final long serialVersionUID = 9150609166649325227L;
