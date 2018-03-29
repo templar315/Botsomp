@@ -19,7 +19,9 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<ProductDTO> add(@RequestBody ProductDTO productDTO) {
         try {
-            return ResponseEntity.ok(productService.add(productDTO));
+            ProductDTO product = productService.add(productDTO);
+            if(product != null) return ResponseEntity.ok(product);
+            else return ResponseEntity.badRequest().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -28,7 +30,9 @@ public class ProductController {
     @PutMapping
     public ResponseEntity<ProductDTO> update(@RequestBody ProductDTO productDTO) {
         try {
-            return ResponseEntity.ok(productService.update(productDTO));
+            ProductDTO product = productService.update(productDTO);
+            if(product != null) return ResponseEntity.ok(product);
+            else return ResponseEntity.badRequest().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -37,8 +41,8 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable long id) {
         try {
-            productService.delete(id);
-            return ResponseEntity.ok().build();
+            if(productService.delete(id)) return ResponseEntity.ok().build();
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -47,7 +51,9 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getOne(@PathVariable long id) {
         try {
-            return ResponseEntity.ok(productService.getOne(id));
+            ProductDTO product = productService.getOne(id);
+            if(product != null) return ResponseEntity.ok(product);
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -59,8 +65,8 @@ public class ProductController {
         return productService.findAll();
     }
 
-    @GetMapping
-    public ResponseEntity<List<ProductDTO>> findByName(@RequestBody String name) {
+    @GetMapping(params = "name")
+    public ResponseEntity<List<ProductDTO>> findByName(@RequestParam("name") String name) {
         try {
             return ResponseEntity.ok(productService.findByName(name));
         } catch (Exception ex) {
@@ -68,8 +74,8 @@ public class ProductController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<ProductDTO>> findByType(@RequestBody String type) {
+    @GetMapping(params = "type")
+    public ResponseEntity<List<ProductDTO>> findByType(@RequestParam("type") String type) {
         try {
             return ResponseEntity.ok(productService.findByType(type));
         } catch (Exception ex) {
@@ -77,9 +83,9 @@ public class ProductController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<ProductDTO> findByNameAndSteelGrade(@RequestBody String name,
-                                                                    @RequestBody String grade) {
+    @GetMapping(params = {"name", "grade"})
+    public ResponseEntity<ProductDTO> findByNameAndSteelGrade(@RequestParam("name") String name,
+                                                                    @RequestParam("grade") String grade) {
         try {
             return ResponseEntity.ok(productService.findByNameAndSteelGradeDesignation(name, grade));
         } catch (Exception ex) {
@@ -87,9 +93,9 @@ public class ProductController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<ProductDTO>> findByTypeAndSteelGrade(@RequestBody String type,
-                                                                           @RequestBody String grade) {
+    @GetMapping(params = {"type", "grade"})
+    public ResponseEntity<List<ProductDTO>> findByTypeAndSteelGrade(@RequestParam("type") String type,
+                                                                           @RequestParam("grade") String grade) {
         try {
             return ResponseEntity.ok(productService.findByTypeAndSteelGradeDesignation(type, grade));
         } catch (Exception ex) {
@@ -97,9 +103,9 @@ public class ProductController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<ProductDTO>> findBySteelGradeAndStandard(@RequestBody String grade,
-                                                                        @RequestBody String standard) {
+    @GetMapping(params = {"grade", "standard"})
+    public ResponseEntity<List<ProductDTO>> findBySteelGradeAndStandard(@RequestParam("grade") String grade,
+                                                                        @RequestParam("standard") String standard) {
         try {
             return ResponseEntity.ok(productService.findBySteelGradeAndProductStandard(grade, standard));
         } catch (Exception ex) {

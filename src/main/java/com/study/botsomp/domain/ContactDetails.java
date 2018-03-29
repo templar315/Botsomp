@@ -1,9 +1,6 @@
 package com.study.botsomp.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -12,6 +9,7 @@ import java.io.Serializable;
 @Table(name = "contact_details")
 @Builder(toBuilder = true)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class ContactDetails implements Serializable {
@@ -39,7 +37,7 @@ public class ContactDetails implements Serializable {
     private String email;
 
     @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "contact_details_manufacturer", unique = true)
+    @JoinColumn(name = "contact_details_manufacturer", nullable = false, unique = true)
     private Manufacturer manufacturer;
 
 }

@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,24 +29,28 @@ public class ProductRepositoryTest extends BaseDomainTest {
 
     @Test
     public void add() {
-        productRepository.save(Product.builder()
+        productRepository.saveAndFlush(Product.builder()
                 .name("Channel #8")
                 .type("Channel bars")
-                .steelGrade(steelGradeRepository.findByDesignation("St5sp"))
-                .productStandard(standardRepository.findByDesignation("GOST8240-89"))
+                .steelGrade(steelGradeRepository.findByDesignation("St3sp"))
+                .productStandard(standardRepository.findByDesignation("GOST380-2005"))
                 .build());
-        assertThat(productRepository.findByName("Channel #8")).isNotEmpty();
+
+        Product product = productRepository
+                .findByNameAndSteelGradeDesignation("Channel #8", "St3sp");
+
+        assertThat(product).isNotNull();
+        assertThat(product.getProductStandard().getDesignation()).isEqualTo("GOST380-2005");
     }
 
     @Test
     public void update() {
-        productRepository.save(productRepository.findByName("Steel hot-rolled channel #5").get(0)
-                .toBuilder()
-                .name("Channel steel hot-rolled #6")
-                .build());
+        Product product = productRepository.findByName("Steel hot-rolled channel #5").get(0);
+        product.setName("Channel steel hot-rolled #6");
+        productRepository.saveAndFlush(product);
 
         assertThat(productRepository.findByName("Channel steel hot-rolled #6")).hasSize(1);
-        assertThat(productRepository.findAll()).hasSize(4);
+        assertThat(productRepository.findAll()).hasSize(1);
     }
 
     @Test
@@ -55,14 +60,14 @@ public class ProductRepositoryTest extends BaseDomainTest {
         products.add(Product.builder()
                 .name("Steel hot-rolled channel #10")
                 .type("Channel bars")
-                .steelGrade(steelGradeRepository.findByDesignation("St5sp"))
-                .productStandard(standardRepository.findByDesignation("GOST8240-89"))
+                .steelGrade(steelGradeRepository.findByDesignation("St3sp"))
+                .productStandard(standardRepository.findByDesignation("GOST380-2005"))
                 .build());
         products.add(Product.builder()
                 .name("Steel hot-rolled channel #12")
                 .type("Channel bars")
-                .steelGrade(steelGradeRepository.findByDesignation("St5sp"))
-                .productStandard(standardRepository.findByDesignation("GOST8240-89"))
+                .steelGrade(steelGradeRepository.findByDesignation("St3sp"))
+                .productStandard(standardRepository.findByDesignation("GOST380-2005"))
                 .build());
 
         productRepository.saveAll(products);
@@ -91,7 +96,7 @@ public class ProductRepositoryTest extends BaseDomainTest {
 
     @Test
     public void findAll() {
-        assertThat(productRepository.findAll()).hasSize(4);
+        assertThat(productRepository.findAll()).hasSize(1);
     }
 
     @Test
@@ -99,20 +104,29 @@ public class ProductRepositoryTest extends BaseDomainTest {
         assertThat(productRepository.findAllById(productRepository.findByType("Channel bars")
                 .stream()
                 .map(Product::getId)
-                .collect(Collectors.toList()))).hasSize(2);
+                .collect(Collectors.toList()))).hasSize(1);
     }
 
     @Test
     public void count() {
-        assertThat(productRepository.count()).isEqualTo(4);
+        assertThat(productRepository.count()).isEqualTo(1);
+    }
+
+    private void deleteUp() {
+        productRepository.saveAndFlush(Product.builder()
+                .name("Steel hot-rolled channel #10")
+                .type("Channel bars")
+                .steelGrade(steelGradeRepository.findByDesignation("St3sp"))
+                .productStandard(standardRepository.findByDesignation("GOST380-2005"))
+                .manufacturers(new ArrayList<>(Arrays.asList(manufacturerRepository.findByName("Azovstal"))))
+                .build());
     }
 
     @Test
     public void deleteById() {
-        Product product = productRepository.findByName("Steel hot-rolled channel #5").get(0);
-
+        deleteUp();
+        Product product = productRepository.findByName("Steel hot-rolled channel #10").get(0);
         clearProduct(product);
-
         productRepository.deleteById(product.getId());
 
         assertThat(productRepository.existsById(product.getId())).isFalse();
@@ -120,10 +134,9 @@ public class ProductRepositoryTest extends BaseDomainTest {
 
     @Test
     public void delete() {
-        Product product = productRepository.findByName("Steel hot-rolled channel #5").get(0);
-
+        deleteUp();
+        Product product = productRepository.findByName("Steel hot-rolled channel #10").get(0);
         clearProduct(product);
-
         productRepository.delete(product);
 
         assertThat(productRepository.existsById(product.getId())).isFalse();
@@ -131,24 +144,13 @@ public class ProductRepositoryTest extends BaseDomainTest {
 
     @Test
     public void deleteByList() {
-        List<Product> products = productRepository.findByType("Channel bars");
-
+        deleteUp();
+        System.out.println(manufacturerRepository.findByName("Azovstal").getManufacturedProducts());
+        List<Product> products = productRepository.findByName("Steel hot-rolled channel #10");
         for(Product product : products) clearProduct(product);
-
         productRepository.deleteAll();
 
-        assertThat(productRepository.findByType("Channel bars")).isEmpty();
-    }
-
-    @Test
-    public void deleteAll() {
-        for(Manufacturer manufacturer : manufacturerRepository.findAll()) {
-            manufacturer.getManufacturedProducts().clear();
-        }
-
-        productRepository.deleteAll();
-
-        assertThat(productRepository.findAll()).isEmpty();
+        assertThat(productRepository.findByName("Steel hot-rolled channel #10")).isEmpty();
     }
 
     @Test
@@ -162,78 +164,38 @@ public class ProductRepositoryTest extends BaseDomainTest {
 
     @Test
     public void findByName() {
-        assertThat(productRepository.findByName("Steel hot-rolled channel #5")).hasSize(2);
+        assertThat(productRepository.findByName("Steel hot-rolled channel #5")).hasSize(1);
     }
 
     @Test
     public void findByType() {
-        assertThat(productRepository.findByType("Channel bars")).hasSize(2);
+        assertThat(productRepository.findByType("Channel bars")).hasSize(1);
     }
 
     @Test
     public void findByNameAndSteelGradeDesignation() {
         assertThat(productRepository.findByNameAndSteelGradeDesignation("Steel hot-rolled channel #5",
-                "St5sp")).isNotNull();
+                "St3sp")).isNotNull();
     }
 
     @Test
     public void findByTypeAndSteelGradeDesignation() {
         assertThat(productRepository.findByTypeAndSteelGradeDesignation("Channel bars",
-                "St5sp")).isNotEmpty().hasSize(1);
+                "St3sp")).isNotEmpty().hasSize(1);
     }
 
     @Test
     public void findBySteelGradeDesignationAndProductStandardDesignation() {
         assertThat(productRepository
-                .findBySteelGradeDesignationAndProductStandardDesignation("St5sp",
-                        "GOST8240-89")).isNotEmpty().hasSize(1);
+                .findBySteelGradeDesignationAndProductStandardDesignation("St3sp",
+                        "GOST380-2005")).isNotEmpty().hasSize(1);
     }
 
     private void clearProduct(Product product) {
-        for(Manufacturer manufacturer : manufacturerRepository.findAll()) {
+        for (Manufacturer manufacturer : product.getManufacturers()) {
             manufacturer.getManufacturedProducts().remove(product);
+            manufacturerRepository.saveAndFlush(manufacturer);
         }
     }
-/*
-    @Test
-    public void startTest() {
-        for(ContactDetails contactDetails : contactDetailsRepository.findAll()) {
-            System.out.println("CD");
-            System.out.println("CD - Manufacturer : " + contactDetails.getManufacturer());
-        }
-        for(Manufacturer manufacturer : manufacturerRepository.findAll()) {
-            System.out.println("M");
-            for(Product product : manufacturer.getManufacturedProducts()) {
-                System.out.println("M - Product : " + product);
-            }
-            System.out.println("M - CD : " + manufacturer.getContactDetails());
-        }
-        for(Product product : productRepository.findAll()) {
-            System.out.println("P");
-            if(product.getManufacturers() != null) {
-                for (Manufacturer manufacturer : product.getManufacturers()) {
-                    System.out.println("P - Manufacturer : " + manufacturer);
-                }
-            }
-            System.out.println("P - SteelGrade : " + product.getSteelGrade());
-            System.out.println("P - Standard : " + product.getProductStandard());
-        }
-        for(Standard standard : standardRepository.findAll()) {
-            System.out.println("ST");
-            for(Product product : standard.getProducts()) {
-                System.out.println("ST - Product : " + product);
-            }
-            for(SteelGrade steelGrade : standard.getSteelGrades()) {
-                System.out.println("ST - SteelGrade : " + steelGrade);
-            }
-        }
-        for(SteelGrade steelGrade : steelGradeRepository.findAll()) {
-            System.out.println("SG");
-            for(Product product : steelGrade.getProducts()) {
-                System.out.println("SG - Product : " + product);
-            }
-            System.out.println("SG - Standard : " + steelGrade.getGradeStandard());
-        }
-    }*/
 
 }

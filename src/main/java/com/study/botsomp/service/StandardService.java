@@ -67,13 +67,15 @@ public class StandardService {
 
     @Transactional
     public StandardDTO add(StandardDTO standardDTO) {
-        return toDTO(standardRepository.saveAndFlush(fromDTO(standardDTO)));
+        if(!standardRepository.existsById(standardDTO.getId())) {
+            return toDTO(standardRepository.saveAndFlush(fromDTO(standardDTO)));
+        } else return null;
     }
 
     @Transactional
     public StandardDTO update(StandardDTO standardDTO) {
         long id = standardDTO.getId();
-        if(id > 0L) {
+        if(standardRepository.existsById(id)) {
             return toDTO(standardRepository
                     .saveAndFlush(standardRepository
                             .getOne(id)
@@ -84,21 +86,24 @@ public class StandardService {
     }
 
     @Transactional
-    public void delete(long id) {
-        Standard standard = standardRepository.getOne(id);
-        if(standard != null) {
+    public boolean delete(long id) {
+        if(standardRepository.existsById(id)) {
+            Standard standard = standardRepository.getOne(id);
             for (Product product : productRepository.findAll()) {
                 if (product.getProductStandard() == standard) {
-                    productRepository.save(product.toBuilder().productStandard(null).build());
+                    product.setProductStandard(null);
+                    productRepository.save(product);
                 }
             }
             for (SteelGrade steelGrade : steelGradeRepository.findAll()) {
                 if (steelGrade.getGradeStandard() == standard) {
-                    steelGradeRepository.save(steelGrade.toBuilder().gradeStandard(null).build());
+                    steelGrade.setGradeStandard(null);
+                    steelGradeRepository.save(steelGrade);
                 }
             }
-        }
-        standardRepository.deleteById(id);
+            standardRepository.deleteById(id);
+            return true;
+        } else return false;
     }
 
     public StandardDTO getOne(long id) {

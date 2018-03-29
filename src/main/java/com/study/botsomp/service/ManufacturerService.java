@@ -1,6 +1,5 @@
 package com.study.botsomp.service;
 
-import com.study.botsomp.domain.ContactDetails;
 import com.study.botsomp.domain.Manufacturer;
 import com.study.botsomp.domain.Product;
 import com.study.botsomp.dto.ManufacturerDTO;
@@ -75,27 +74,43 @@ public class ManufacturerService {
 
     @Transactional
     public ManufacturerDTO add(ManufacturerDTO manufacturerDTO) {
-        return toDTO(manufacturerRepository.saveAndFlush(fromDTO(manufacturerDTO)));
+        if (!manufacturerRepository.existsById(manufacturerDTO.getId())) {
+            return toDTO(manufacturerRepository.saveAndFlush(fromDTO(manufacturerDTO)));
+        } return null;
     }
 
     @Transactional
     public ManufacturerDTO update(ManufacturerDTO manufacturerDTO) {
-        long id = manufacturerDTO.getId();
-        if(id > 0L) {
-            ContactDetails contacts = manufacturerRepository.getOne(id).getContactDetails();
-            manufacturerDTO.setContactDetails(contacts == null ? null : contacts.getId());
-
-            return toDTO(manufacturerRepository.saveAndFlush(fromDTO(manufacturerDTO)));
-        } else return null;
+        if(manufacturerRepository.existsById(manufacturerDTO.getId())) {
+            return toDTO(manufacturerRepository.saveAndFlush(
+                    manufacturerRepository.getOne(manufacturerDTO.getId())
+                            .toBuilder()
+                            .name(manufacturerDTO.getName())
+                            .country(manufacturerDTO.getCountry())
+                            .region(manufacturerDTO.getRegion())
+                            .city(manufacturerDTO.getCity())
+                            .address(manufacturerDTO.getAddress())
+                            .manufacturedProducts(manufacturerDTO.getManufacturedProducts() == null
+                                    ? null
+                                    : productRepository.findAllById(manufacturerDTO.getManufacturedProducts()))
+                            .contactDetails(manufacturerDTO.getContactDetails() == null
+                                    ? null
+                                    : contactDetailsRepository.getOne(manufacturerDTO.getContactDetails()))
+                            .build()));
+        } return null;
     }
 
     @Transactional
-    public void delete(long id) {
-        ContactDetails contacts = manufacturerRepository.getOne(id).getContactDetails();
-        if(contacts != null) {
-            contactDetailsRepository.delete(contacts);
-        }
-        manufacturerRepository.deleteById(id);
+    public boolean delete(long id) {
+        if(manufacturerRepository.existsById(id)) {
+            Manufacturer manufacturer = manufacturerRepository.getOne(id);
+            for(Product product : manufacturer.getManufacturedProducts()) {
+                product.getManufacturers().remove(manufacturer);
+                productRepository.saveAndFlush(product);
+            }
+            manufacturerRepository.deleteById(id);
+            return true;
+        } else return false;
     }
 
     public ManufacturerDTO getOne(long id) {

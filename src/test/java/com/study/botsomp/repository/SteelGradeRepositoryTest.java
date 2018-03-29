@@ -3,11 +3,13 @@ package com.study.botsomp.repository;
 import com.study.botsomp.BaseDomainTest;
 import com.study.botsomp.domain.Manufacturer;
 import com.study.botsomp.domain.Product;
+import com.study.botsomp.domain.Standard;
 import com.study.botsomp.domain.SteelGrade;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,13 +40,12 @@ public class SteelGradeRepositoryTest extends BaseDomainTest {
 
     @Test
     public void update() {
-        steelGradeRepository.save(steelGradeRepository.findByDesignation("St5sp")
-                .toBuilder()
-                .designation("St5")
-                .build());
+        SteelGrade steelGrade = steelGradeRepository.findByDesignation("St3sp");
+        steelGrade.setDesignation("St5");
+        steelGradeRepository.saveAndFlush(steelGrade);
 
         assertThat(steelGradeRepository.findByDesignation("St5")).isNotNull();
-        assertThat(steelGradeRepository.findAll()).hasSize(4);
+        assertThat(steelGradeRepository.findAll()).hasSize(1);
     }
 
     @Test
@@ -69,105 +70,118 @@ public class SteelGradeRepositoryTest extends BaseDomainTest {
     @Test
     public void findById() {
         assertThat(steelGradeRepository
-                .findById(steelGradeRepository.findByDesignation("St5sp").getId()))
+                .findById(steelGradeRepository.findByDesignation("St3sp").getId()))
                 .isNotNull();
     }
 
     @Test
     public void existsById() {
         assertThat(steelGradeRepository
-                .existsById(steelGradeRepository.findByDesignation("St5sp").getId()))
+                .existsById(steelGradeRepository.findByDesignation("St3sp").getId()))
                 .isTrue();
     }
 
     @Test
     public void findAllByIds() {
-        List<Long> ids = new ArrayList<>();
-
-        ids.add(steelGradeRepository.findByDesignation("St5sp").getId());
-        ids.add(steelGradeRepository.findByDesignation("St3sp").getId());
-
-        assertThat(steelGradeRepository.findAllById(ids)).hasSize(2);
+        List<Long> ids = new ArrayList<>(Arrays.asList(steelGradeRepository.findByDesignation("St3sp").getId()));
+        assertThat(steelGradeRepository.findAllById(ids)).hasSize(1);
     }
 
     @Test
     public void count() {
-        assertThat(steelGradeRepository.count()).isEqualTo(4);
+        assertThat(steelGradeRepository.count()).isEqualTo(1);
+    }
+
+    private void deleteUp() {
+        standardRepository.save(Standard.builder()
+                .designation("GOST540-2012")
+                .build());
+
+        steelGradeRepository.save(SteelGrade.builder()
+                .designation("St6sp")
+                .gradeStandard(standardRepository.findByDesignation("GOST540-2012"))
+                .build());
+
+        productRepository.save(Product.builder()
+                .name("Steel hot-rolled channel #10")
+                .type("Channel bars")
+                .steelGrade(steelGradeRepository.findByDesignation("St6sp"))
+                .productStandard(standardRepository.findByDesignation("GOST540-2012"))
+                .manufacturers(new ArrayList<>())
+                .build());
+
+        SteelGrade steelGrade = steelGradeRepository.findByDesignation("St6sp");
+        steelGrade.setProducts(new ArrayList<>(Arrays.asList(productRepository
+                .findByName("Steel hot-rolled channel #10")
+                .get(0))));
+        steelGradeRepository.saveAndFlush(steelGrade);
+
+        manufacturerRepository.save(Manufacturer.builder()
+                .name("Ilyich Plant")
+                .country("Ukraine")
+                .region("Donetsk region")
+                .city("Donetsk")
+                .address("Str. Unclearly, 100")
+                .manufacturedProducts(new ArrayList<>(Arrays.asList(productRepository
+                        .findByName("Steel hot-rolled channel #10")
+                        .get(0))))
+                .build());
+
+        Product product = productRepository.findByName("Steel hot-rolled channel #10").get(0);
+        product.setManufacturers(new ArrayList<>(Arrays.asList(manufacturerRepository.findByName("Ilyich Plant"))));
+        productRepository.saveAndFlush(product);
+
     }
 
     @Test
     public void deleteById() {
-        SteelGrade steelGrade = steelGradeRepository.findByDesignation("St5sp");
-
+        deleteUp();
+        SteelGrade steelGrade = steelGradeRepository.findByDesignation("St6sp");
         clearSteelGrade(steelGrade);
-
         steelGradeRepository.deleteById(steelGrade.getId());
 
-        assertThat(steelGradeRepository.findByDesignation("St5sp")).isNull();
+        assertThat(steelGradeRepository.findByDesignation("St6sp")).isNull();
     }
 
     @Test
     public void delete() {
-        SteelGrade steelGrade = steelGradeRepository.findByDesignation("St5sp");
-
+        deleteUp();
+        SteelGrade steelGrade = steelGradeRepository.findByDesignation("St6sp");
         clearSteelGrade(steelGrade);
-
         steelGradeRepository.delete(steelGrade);
 
-        assertThat(steelGradeRepository.findByDesignation("St5sp")).isNull();
+        assertThat(steelGradeRepository.findByDesignation("St6sp")).isNull();
     }
 
     @Test
     public void deleteFromList() {
-        List<SteelGrade> steelGrades = new ArrayList<>();
-
-        steelGrades.add(steelGradeRepository.findByDesignation("St5sp"));
-        steelGrades.add(steelGradeRepository.findByDesignation("St3sp"));
-
+        deleteUp();
+        List<SteelGrade> steelGrades = new ArrayList<>(Arrays.asList(steelGradeRepository
+                .findByDesignation("St6sp")));
         clearSteelGrade(steelGrades.get(0));
-        clearSteelGrade(steelGrades.get(1));
-
         steelGradeRepository.deleteAll(steelGrades);
 
-        assertThat(steelGradeRepository.findByDesignation("St5sp")).isNull();
-        assertThat(steelGradeRepository.findByDesignation("St3sp")).isNull();
-    }
-
-    @Test
-    public void deleteAll() {
-        for(Manufacturer manufacturer : manufacturerRepository.findAll()) {
-            manufacturer.getManufacturedProducts().clear();
-        }
-        for(Product product : productRepository.findAll()) {
-            productRepository.delete(product);
-        }
-
-        steelGradeRepository.deleteAll();
-
-        assertThat(steelGradeRepository.findAll()).isEmpty();
+        assertThat(steelGradeRepository.findByDesignation("St6sp")).isNull();
     }
 
     @Test
     public void getOne() {
         assertThat(steelGradeRepository
-                .getOne(steelGradeRepository.findByDesignation("St5sp").getId())).isNotNull();
+                .getOne(steelGradeRepository.findByDesignation("St3sp").getId())).isNotNull();
     }
 
     @Test
     public void findByDesignation() {
-        assertThat(steelGradeRepository.findByDesignation("St5sp")).isNotNull();
+        assertThat(steelGradeRepository.findByDesignation("St3sp")).isNotNull();
     }
 
     private void clearSteelGrade(SteelGrade steelGrade) {
-        for(Product product : productRepository.findAll()) {
-            if(product.getSteelGrade() == steelGrade) {
-                for(Manufacturer manufacturer : manufacturerRepository.findAll()) {
-                    if(manufacturer.getManufacturedProducts().contains(product)) {
-                        manufacturer.getManufacturedProducts().remove(product);
-                    }
-                }
-                productRepository.delete(product);
+        for(Product product : steelGrade.getProducts()) {
+            for(Manufacturer manufacturer : product.getManufacturers()) {
+                manufacturer.getManufacturedProducts().remove(product);
+                manufacturerRepository.saveAndFlush(manufacturer);
             }
+            productRepository.delete(product);
         }
     }
 }

@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,7 +29,6 @@ public class ContactDetailsRepositoryTest extends BaseDomainTest {
                 .city("Donetsk")
                 .address("Str. Unclearly, 100")
                 .build();
-        manufacturerRepository.save(manufacturer);
 
         ContactDetails contactDetails = ContactDetails.builder()
                 .firstName("Valentine")
@@ -38,19 +38,20 @@ public class ContactDetailsRepositoryTest extends BaseDomainTest {
                 .email("dmz@com.ua")
                 .manufacturer(manufacturer)
                 .build();
-        contactDetailsRepository.save(contactDetails);
 
-
+        manufacturer.setContactDetails(contactDetails);
+        contactDetailsRepository.saveAndFlush(contactDetails);
 
         assertThat(contactDetailsRepository.findByManufacturerName("Ilyich Plant").getId()).isNotNull();
     }
 
     @Test
     public void update() {
-        contactDetailsRepository.save(contactDetailsRepository.findByManufacturerName("Azovstal").toBuilder()
-                .firstName("Valery")
-                .lastName("Rusty")
-                .build());
+        ContactDetails contactDetails = contactDetailsRepository.findByManufacturerName("Azovstal");
+        contactDetails.setFirstName("Valery");
+        contactDetails.setLastName("Rusty");
+        System.out.println(contactDetails);
+        contactDetailsRepository.save(contactDetails);
 
         assertThat(contactDetailsRepository.findByManufacturerName("Azovstal").getFirstName()).isEqualTo("Valery");
         assertThat(contactDetailsRepository.findByManufacturerName("Azovstal").getLastName()).isEqualTo("Rusty");
@@ -95,61 +96,28 @@ public class ContactDetailsRepositoryTest extends BaseDomainTest {
     @Test
     public void existsById() {
         assertThat(contactDetailsRepository.existsById(
-                contactDetailsRepository.findByManufacturerName("Azovstal").getId())).isTrue();
+                contactDetailsRepository.findByManufacturerName("Azovstal").getId()))
+                .isTrue();
     }
 
     @Test
     public void findAll() {
-        assertThat(contactDetailsRepository.findAll()).hasSize(2);
+        System.out.println(contactDetailsRepository.findAll());
+        assertThat(contactDetailsRepository.findAll()).hasSize(1);
     }
 
     @Test
     public void findAllById() {
-        List<Long> ids = new ArrayList<>();
+        List<Long> ids = new ArrayList<>(Arrays.asList(contactDetailsRepository
+                .findByManufacturerName("Azovstal")
+                .getId()));
 
-        ids.add(contactDetailsRepository.findByManufacturerName("Azovstal").getId());
-        ids.add(contactDetailsRepository.findByManufacturerName("Donetsk Metallurgical Plant").getId());
-
-        assertThat(contactDetailsRepository.findAllById(ids)).hasSize(2);
+        assertThat(contactDetailsRepository.findAllById(ids)).hasSize(1);
     }
 
     @Test
     public void count() {
-        assertThat(contactDetailsRepository.count()).isEqualTo(2);
-    }
-
-    @Test
-    public void deleteById() {
-        contactDetailsRepository.deleteById(contactDetailsRepository.findByManufacturerName("Azovstal").getId());
-
-        assertThat(contactDetailsRepository.findByManufacturerName("Azovstal")).isNull();
-    }
-
-    @Test
-    public void delete() {
-        contactDetailsRepository.delete(contactDetailsRepository.findByManufacturerName("Azovstal"));
-
-        assertThat(contactDetailsRepository.findByManufacturerName("Azovstal")).isNull();
-    }
-
-    @Test
-    public void deleteList() {
-        List<ContactDetails> contactDetails = new ArrayList<>();
-
-        contactDetails.add(contactDetailsRepository.findByManufacturerName("Azovstal"));
-        contactDetails.add(contactDetailsRepository.findByManufacturerName("Donetsk Metallurgical Plant"));
-
-        contactDetailsRepository.deleteAll(contactDetails);
-
-        assertThat(contactDetailsRepository.findByManufacturerName("Azovstal")).isNull();
-        assertThat(contactDetailsRepository.findByManufacturerName("Donetsk Metallurgical Plant")).isNull();
-    }
-
-    @Test
-    public void deleteAll() {
-        contactDetailsRepository.deleteAll();
-
-        assertThat(contactDetailsRepository.findAll()).isEmpty();
+        assertThat(contactDetailsRepository.count()).isEqualTo(1);
     }
 
     @Test

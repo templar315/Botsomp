@@ -1,5 +1,6 @@
 package com.study.botsomp.service;
 
+import com.study.botsomp.domain.Manufacturer;
 import com.study.botsomp.domain.Product;
 import com.study.botsomp.domain.SteelGrade;
 import com.study.botsomp.dto.SteelGradeDTO;
@@ -63,36 +64,43 @@ public class SteelGradeService {
 
     @Transactional
     public SteelGradeDTO add(SteelGradeDTO steelGradeDTO) {
-        return toDTO(steelGradeRepository.saveAndFlush(fromDTO(steelGradeDTO)));
-    }
-
-    @Transactional
-    public SteelGradeDTO update(SteelGradeDTO steelGradeDTO) {
-        long id = steelGradeDTO.getId();
-        if(id > 0L) {
-            steelGradeDTO.setProducts(steelGradeRepository
-                    .getOne(id)
-                    .getProducts()
-                    .stream()
-                    .map(Product::getId)
-                    .collect(Collectors.toList()));
+        if(!steelGradeRepository.existsById(steelGradeDTO.getId())) {
             return toDTO(steelGradeRepository.saveAndFlush(fromDTO(steelGradeDTO)));
         } else return null;
     }
 
     @Transactional
-    public void delete(long id) {
-        SteelGrade steelGrade = steelGradeRepository.getOne(id);
-        if(steelGrade != null) {
-            for (Product product : productRepository.findAll()) {
+    public SteelGradeDTO update(SteelGradeDTO steelGradeDTO) {
+        if(steelGradeRepository.existsById(steelGradeDTO.getId())) {
+            return toDTO(steelGradeRepository.saveAndFlush(
+                    steelGradeRepository.getOne(steelGradeDTO.getId()).toBuilder().designation(steelGradeDTO.getDesignation())
+                            .products(steelGradeDTO.getProducts() == null
+                                    ? null
+                                    : productRepository.findAllById(steelGradeDTO.getProducts()))
+                            .gradeStandard(steelGradeDTO.getGradeStandard() == null
+                                    ? null
+                                    : standardRepository.findByDesignation(steelGradeDTO.getGradeStandard()))
+                            .build()));
+        } else return null;
+    }
+
+    @Transactional
+    public boolean delete(long id) {
+        if(steelGradeRepository.existsById(id)) {
+            SteelGrade steelGrade = steelGradeRepository.getOne(id);
+            for(Product product : productRepository.findAll()) {
                 if (product.getSteelGrade() == steelGrade) {
-                    productRepository.saveAndFlush(product.toBuilder()
-                            .steelGrade(null)
-                            .build());
+                    for(Manufacturer manufacturer : manufacturerRepository.findAll()) {
+                        manufacturer.getManufacturedProducts().remove(product);
+                        manufacturerRepository.saveAndFlush(manufacturer);
+                    }
+                    productRepository.deleteById(product.getId());
                 }
             }
+            steelGradeRepository.deleteById(id);
+            return true;
         }
-        steelGradeRepository.deleteById(id);
+        return false;
     }
 
     public SteelGradeDTO getOne(Long id) {

@@ -19,7 +19,9 @@ public class SteelGradeController {
     @PostMapping
     public ResponseEntity<SteelGradeDTO> add(@RequestBody SteelGradeDTO steelGradeDTO) {
         try {
-            return ResponseEntity.ok(steelGradeService.add(steelGradeDTO));
+            SteelGradeDTO steelGrade = steelGradeService.add(steelGradeDTO);
+            if(steelGrade != null) return ResponseEntity.ok(steelGrade);
+            else return ResponseEntity.badRequest().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -28,7 +30,9 @@ public class SteelGradeController {
     @PutMapping
     public ResponseEntity<SteelGradeDTO> update(@RequestBody SteelGradeDTO steelGradeDTO) {
         try {
-            return ResponseEntity.ok(steelGradeService.update(steelGradeDTO));
+            SteelGradeDTO steelGrade = steelGradeService.update(steelGradeDTO);
+            if(steelGrade != null) return ResponseEntity.ok(steelGrade);
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -37,8 +41,8 @@ public class SteelGradeController {
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable long id) {
         try {
-            steelGradeService.delete(id);
-            return ResponseEntity.ok().build();
+            if(steelGradeService.delete(id)) return ResponseEntity.ok().build();
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -47,7 +51,9 @@ public class SteelGradeController {
     @GetMapping("/{id}")
     public ResponseEntity<SteelGradeDTO> getOne(@PathVariable long id) {
         try {
-            return ResponseEntity.ok(steelGradeService.getOne(id));
+            SteelGradeDTO steelGrade = steelGradeService.getOne(id);
+            if(steelGrade != null) return ResponseEntity.ok(steelGrade);
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -56,15 +62,6 @@ public class SteelGradeController {
     @GetMapping
     public List<SteelGradeDTO> findAll() {
         return steelGradeService.findAll();
-    }
-
-    @GetMapping
-    public ResponseEntity<SteelGradeDTO> findByDesignation(@RequestBody String designation) {
-        try {
-            return ResponseEntity.ok(steelGradeService.findByDesignation(designation));
-        } catch (Exception ex) {
-            return ResponseEntity.badRequest().build();
-        }
     }
 
 }

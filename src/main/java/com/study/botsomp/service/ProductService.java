@@ -75,53 +75,75 @@ public class ProductService {
 
     @Transactional
     public ProductDTO add(ProductDTO productDTO) {
-        boolean check = true;
+        try {
+            if (!productRepository.existsById(productDTO.getId())) {
+                boolean check = true;
 
-        for (Product product : productRepository.findAll()) {
-            if (product.getName().equals(productDTO.getName())
-                    && product.getSteelGrade().getDesignation().equals(productDTO.getSteelGrade()))
-                check = false;
+                for (Product product : productRepository.findAll()) {
+                    if (product.getName().equals(productDTO.getName())
+                            && product.getSteelGrade().getDesignation().equals(productDTO.getSteelGrade()))
+                        check = false;
+                }
+
+                if (check) {
+                    return toDTO(productRepository.saveAndFlush(fromDTO(productDTO)));
+                }
+            }
+            return null;
+        } catch(Exception ex) {
+            throw new IllegalStateException("Error while executing the write operation of product");
         }
-
-        if (check) {
-            return toDTO(productRepository.saveAndFlush(fromDTO(productDTO)));
-        } else return null;
     }
 
     @Transactional
     public ProductDTO update(ProductDTO productDTO) {
-        long id = productDTO.getId();
-        if(id > 0L) {
+        if (productRepository.existsById(productDTO.getId())) {
             boolean check = true;
 
             for (Product product : productRepository.findAll()) {
                 if (product.getName().equals(productDTO.getName())
-                        && product.getSteelGrade().getDesignation().equals(productDTO.getSteelGrade()))
+                        && product.getSteelGrade().getDesignation().equals(productDTO.getSteelGrade())
+                        && product.getId() != productDTO.getId()) {
                     check = false;
+                }
             }
 
             if (check) {
-                productDTO.setManufacturers(productRepository
-                        .getOne(id)
-                        .getManufacturers()
-                        .stream()
-                        .map(Manufacturer::getId)
-                        .collect(Collectors.toList()));
-                return toDTO(productRepository.saveAndFlush(fromDTO(productDTO)));
-            } else return null;
-        } else return null;
+                try {
+                    Product product = productRepository.getOne(productDTO.getId());
+                    product.setName(productDTO.getName());
+                    product.setType(productDTO.getType());
+                    product.setManufacturers(productDTO.getManufacturers() == null
+                            ? null
+                            : manufacturerRepository.findAllById(productDTO.getManufacturers()));
+                    product.setSteelGrade(productDTO.getSteelGrade() == null
+                            ? null
+                            : steelGradeRepository.findByDesignation(productDTO.getSteelGrade()));
+                    product.setProductStandard(productDTO.getStandard() == null
+                            ? null
+                            : standardRepository.findByDesignation(productDTO.getStandard()));
+                    return toDTO(productRepository.saveAndFlush(product));
+                } catch(Exception ex) {
+                    System.out.println(ex);
+                }
+            }
+        }
+        return null;
     }
 
     @Transactional
-    public void delete(long id) {
-        Product product = productRepository.getOne(id);
-        for (Manufacturer manufacturer : manufacturerRepository.findAll()) {
-            if (manufacturer.getManufacturedProducts().contains(product)) {
-                manufacturer.getManufacturedProducts().remove(product);
-                manufacturerRepository.saveAndFlush(manufacturer);
+    public boolean delete(long id) {
+        if(productRepository.existsById(id)) {
+            Product product = productRepository.getOne(id);
+            for (Manufacturer manufacturer : manufacturerRepository.findAll()) {
+                if (manufacturer.getManufacturedProducts().contains(product)) {
+                    manufacturer.getManufacturedProducts().remove(product);
+                    manufacturerRepository.saveAndFlush(manufacturer);
+                }
             }
-        }
-        productRepository.deleteById(id);
+            productRepository.deleteById(id);
+            return true;
+        } else return false;
     }
 
     public ProductDTO getOne(long id) {

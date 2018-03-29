@@ -1,6 +1,8 @@
 package com.study.botsomp.service;
 
 import com.study.botsomp.BaseDomainTest;
+import com.study.botsomp.dto.ProductDTO;
+import com.study.botsomp.dto.StandardDTO;
 import com.study.botsomp.dto.SteelGradeDTO;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,54 +16,70 @@ public class SteelGradeServiceTest extends BaseDomainTest {
     @Autowired
     private SteelGradeService steelGradeService;
 
-    @Test
-    public void addOrUpdate() {
-        steelGradeService.addOrUpdate(SteelGradeDTO
-                .builder()
-                .designation("St2sp")
-                .gradeStandard("GOST380-2005")
+    @Autowired
+    private StandardService standardService;
+
+    @Autowired
+    private ProductService productService;
+
+    private void addUp() {
+        standardService.add(StandardDTO.builder()
+                .designation("GOST540-2012")
                 .build());
 
-        assertThat(steelGradeService.findByDesignation("St2sp")).isNotNull();
-
-        steelGradeService.addOrUpdate(steelGradeService
-                .findByDesignation("St2sp")
-                .toBuilder()
-                .gradeStandard("GOST5058-65")
+        steelGradeService.add(SteelGradeDTO.builder()
+                .designation("St6sp")
+                .gradeStandard("GOST540-2012")
                 .build());
 
-        assertThat(steelGradeService.findByDesignation("St2sp").getGradeStandard()).isEqualTo("GOST5058-65");
+        productService.add(ProductDTO.builder()
+                .name("Steel hot-rolled channel #5")
+                .type("Channel bars")
+                .steelGrade("St6sp")
+                .standard("GOST540-2012")
+                .build());
     }
 
     @Test
-    public void deleteById() {
-        assertThat(steelGradeService.delete(steelGradeService.findByDesignation("St5sp").getId())).isTrue();
-        assertThat(steelGradeService.findByDesignation("St5sp")).isNull();
+    public void add() {
+        addUp();
+
+        assertThat(steelGradeService.findByDesignation("St6sp")).isNotNull();
+        assertThat(steelGradeService.findAll()).hasSize(2);
     }
 
     @Test
-    public void deleteByDesignation() {
-        assertThat(steelGradeService.delete("St5sp")).isTrue();
-        assertThat(steelGradeService.findByDesignation("St5sp")).isNull();
+    public void update() {
+        addUp();
+        SteelGradeDTO steelGradeDTO = steelGradeService.findByDesignation("St6sp");
+        steelGradeDTO.setDesignation("St6");
+        steelGradeService.update(steelGradeDTO);
+
+        assertThat(steelGradeService.findByDesignation("St6")).isNotNull();
+        assertThat(steelGradeService.findAll()).hasSize(2);
+    }
+
+    @Test
+    public void delete() {
+        addUp();
+        steelGradeService.delete(steelGradeService.findByDesignation("St6sp").getId());
+
+        assertThat(steelGradeService.findByDesignation("St6sp")).isNull();
     }
 
     @Test
     public void getOne() {
-        assertThat(steelGradeService.getOne(steelGradeService.findByDesignation("St5sp").getId())).isNotNull();
-    }
-
-    @Test
-    public void existsById() {
-        assertThat(steelGradeService.existsById(steelGradeService.findByDesignation("St5sp").getId())).isTrue();
+        assertThat(steelGradeService.getOne(steelGradeService.findByDesignation("St3sp").getId())).isNotNull();
     }
 
     @Test
     public void findAll() {
-        assertThat(steelGradeService.findAll()).hasSize(4);
+        assertThat(steelGradeService.findAll()).hasSize(1);
     }
 
     @Test
     public void findByDesignation() {
-        assertThat(steelGradeService.findByDesignation("St5sp")).isNotNull();
+        assertThat(steelGradeService.findByDesignation("St3sp")).isNotNull();
     }
+
 }

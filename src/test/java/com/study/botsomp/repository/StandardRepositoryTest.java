@@ -25,7 +25,7 @@ public class StandardRepositoryTest extends BaseDomainTest {
 
     @Test
     public void add() {
-        standardRepository.save(Standard.builder()
+        standardRepository.saveAndFlush(Standard.builder()
                 .designation("GOST7798-70")
                 .build());
 
@@ -34,13 +34,12 @@ public class StandardRepositoryTest extends BaseDomainTest {
 
     @Test
     public void update() {
-        standardRepository.save(standardRepository.findByDesignation("GOST8240-89")
-                .toBuilder()
-                .designation("GOST8240-2018")
-                .build());
+        Standard standard = standardRepository.findByDesignation("GOST380-2005");
+        standard.setDesignation("GOST8240-2018");
+        standardRepository.saveAndFlush(standard);
 
         assertThat(standardRepository.findByDesignation("GOST8240-2018")).isNotNull();
-        assertThat(standardRepository.findAll()).hasSize(4);
+        assertThat(standardRepository.findAll()).hasSize(1);
     }
 
     @Test
@@ -63,82 +62,72 @@ public class StandardRepositoryTest extends BaseDomainTest {
     @Test
     public void findById() {
         assertThat(standardRepository
-                .findById(standardRepository.findByDesignation("GOST8240-89").getId()))
+                .findById(standardRepository.findByDesignation("GOST380-2005").getId()))
                 .isNotNull();
     }
 
     @Test
     public void existsById() {
         assertThat(standardRepository
-                .existsById(standardRepository.findByDesignation("GOST8240-89").getId()))
+                .existsById(standardRepository.findByDesignation("GOST380-2005").getId()))
                 .isTrue();
     }
 
     @Test
     public void findAll() {
-        assertThat(standardRepository.findAll()).hasSize(4);
+        assertThat(standardRepository.findAll()).hasSize(1);
     }
 
     @Test
     public void findAllById() {
         List<Long> ids = new ArrayList<>();
+        ids.add(standardRepository.findByDesignation("GOST380-2005").getId());
 
-        ids.add(standardRepository.findByDesignation("GOST8240-89").getId());
-        ids.add(standardRepository.findByDesignation("GOST8509-93").getId());
-
-        assertThat(standardRepository.findAllById(ids)).hasSize(2);
+        assertThat(standardRepository.findAllById(ids)).hasSize(1);
     }
 
     @Test
     public void count() {
-        assertThat(standardRepository.count()).isEqualTo(4);
+        assertThat(standardRepository.count()).isEqualTo(1);
     }
 
     @Test
     public void deleteById() {
-        Standard standard = standardRepository.findByDesignation("GOST8240-89");
-
+        Standard standard = standardRepository.findByDesignation("GOST380-2005");
         clearStandard(standard);
-
         standardRepository.deleteById(standard.getId());
 
-        assertThat(standardRepository.findByDesignation("GOST8240-89")).isNull();
+        assertThat(standardRepository.findByDesignation("GOST380-2005")).isNull();
     }
 
     @Test
     public void delete() {
-        Standard standard = standardRepository.findByDesignation("GOST8240-89");
-
+        Standard standard = standardRepository.findByDesignation("GOST380-2005");
         clearStandard(standard);
-
         standardRepository.delete(standard);
 
-        assertThat(standardRepository.findByDesignation("GOST8240-89")).isNull();
+        assertThat(standardRepository.findByDesignation("GOST380-2005")).isNull();
     }
 
     @Test
     public void deleteFromList() {
         List<Standard> standards = new ArrayList<>();
-
-        standards.add(standardRepository.findByDesignation("GOST8240-89"));
-        standards.add(standardRepository.findByDesignation("GOST8509-93"));
-
+        standards.add(standardRepository.findByDesignation("GOST380-2005"));
         clearStandard(standards.get(0));
-        clearStandard(standards.get(1));
-
         standardRepository.deleteAll(standards);
 
-        assertThat(standardRepository.findByDesignation("GOST8240-89")).isNull();
-        assertThat(standardRepository.findByDesignation("GOST8509-93")).isNull();
+        assertThat(standardRepository.findByDesignation("GOST380-2005")).isNull();
     }
 
     @Test
     public void deleteAll() {
         for(Product product : productRepository.findAll()) {
-            productRepository.save(product.toBuilder().productStandard(null).build());
+            product.setProductStandard(null);
+            productRepository.save(product);
         }
         for(SteelGrade steelGrade : steelGradeRepository.findAll()) {
-            steelGradeRepository.save(steelGrade.toBuilder().gradeStandard(null).build());
+            steelGrade.setGradeStandard(null);
+            steelGradeRepository.save(steelGrade);
         }
 
         standardRepository.deleteAll();
@@ -148,24 +137,26 @@ public class StandardRepositoryTest extends BaseDomainTest {
 
     @Test
     public void getOne() {
-        assertThat(standardRepository.getOne(standardRepository.findByDesignation("GOST8240-89").getId())
-                .getDesignation()).isEqualTo("GOST8240-89");
+        assertThat(standardRepository.getOne(standardRepository.findByDesignation("GOST380-2005").getId())
+                .getDesignation()).isEqualTo("GOST380-2005");
     }
 
     @Test
     public void findByDesignation() {
-        assertThat(standardRepository.findByDesignation("GOST8240-89")).isNotNull();
+        assertThat(standardRepository.findByDesignation("GOST380-2005")).isNotNull();
     }
 
     private void clearStandard(Standard standard) {
-        for(Product product : productRepository.findAll()) {
+        for(Product product : standard.getProducts()) {
             if(product.getProductStandard() == standard) {
-                productRepository.save(product.toBuilder().productStandard(null).build());
+                product.setProductStandard(null);
+                productRepository.save(product);
             }
         }
-        for(SteelGrade steelGrade : steelGradeRepository.findAll()) {
+        for(SteelGrade steelGrade : standard.getSteelGrades()) {
             if(steelGrade.getGradeStandard() == standard) {
-                steelGradeRepository.save(steelGrade.toBuilder().gradeStandard(null).build());
+                steelGrade.setGradeStandard(null);
+                steelGradeRepository.save(steelGrade);
             }
         }
     }

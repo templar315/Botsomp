@@ -1,9 +1,6 @@
 package com.study.botsomp.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -13,6 +10,7 @@ import java.util.List;
 @Table(name = "standard")
 @Builder(toBuilder = true)
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Standard implements Serializable {

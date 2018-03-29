@@ -19,7 +19,9 @@ public class StandardController {
     @PostMapping
     public ResponseEntity<StandardDTO> add(@RequestBody StandardDTO standardDTO) {
         try {
-            return ResponseEntity.ok(standardService.add(standardDTO));
+            StandardDTO standard = standardService.add(standardDTO);
+            if(standard != null) return ResponseEntity.ok(standard);
+            return ResponseEntity.badRequest().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -28,7 +30,9 @@ public class StandardController {
     @PutMapping
     public ResponseEntity<StandardDTO> update(@RequestBody StandardDTO standardDTO) {
         try {
-            return ResponseEntity.ok(standardService.update(standardDTO));
+            StandardDTO standard = standardService.update(standardDTO);
+            if(standard != null) return ResponseEntity.ok(standard);
+            return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -37,8 +41,8 @@ public class StandardController {
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable long id) {
         try {
-            standardService.delete(id);
-            return ResponseEntity.ok().build();
+            if(standardService.delete(id)) return ResponseEntity.ok().build();
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -47,7 +51,9 @@ public class StandardController {
     @GetMapping("/{id}")
     public ResponseEntity<StandardDTO> getOne(@PathVariable long id) {
         try {
-            return ResponseEntity.ok(standardService.getOne(id));
+            StandardDTO standard = standardService.getOne(id);
+            if(standard != null) return ResponseEntity.ok(standard);
+            return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -56,15 +62,6 @@ public class StandardController {
     @GetMapping
     public List<StandardDTO> findAll() {
         return standardService.findAll();
-    }
-
-    @GetMapping
-    public ResponseEntity<StandardDTO> findByDesignation(@RequestBody String designation) {
-        try {
-            return ResponseEntity.ok(standardService.findByDesignation(designation));
-        } catch (Exception ex) {
-            return ResponseEntity.badRequest().build();
-        }
     }
 
 }

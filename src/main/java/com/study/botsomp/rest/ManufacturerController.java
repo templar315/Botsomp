@@ -19,7 +19,9 @@ public class ManufacturerController {
     @PostMapping
     public ResponseEntity<ManufacturerDTO> add(@RequestBody ManufacturerDTO manufacturerDTO) {
         try {
-            return ResponseEntity.ok(manufacturerService.add(manufacturerDTO));
+            ManufacturerDTO manufacturer = manufacturerService.add(manufacturerDTO);
+            if(manufacturer != null) return ResponseEntity.ok(manufacturer);
+            else return ResponseEntity.badRequest().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -28,7 +30,9 @@ public class ManufacturerController {
     @PutMapping
     public ResponseEntity<ManufacturerDTO> update(@RequestBody ManufacturerDTO manufacturerDTO) {
         try {
-            return ResponseEntity.ok(manufacturerService.update(manufacturerDTO));
+            ManufacturerDTO manufacturer = manufacturerService.update(manufacturerDTO);
+            if(manufacturer != null) return ResponseEntity.ok(manufacturer);
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -37,8 +41,10 @@ public class ManufacturerController {
     @DeleteMapping("/{id}")
     public ResponseEntity delete(@PathVariable long id) {
         try {
-            manufacturerService.delete(id);
-            return ResponseEntity.ok().build();
+            if(manufacturerService.delete(id)) {
+                return ResponseEntity.ok().build();
+            }
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -47,16 +53,9 @@ public class ManufacturerController {
     @GetMapping("/{id}")
     public ResponseEntity<ManufacturerDTO> getOne(@PathVariable long id) {
         try {
-            return ResponseEntity.ok(manufacturerService.getOne(id));
-        } catch (Exception ex) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @GetMapping
-    public ResponseEntity<ManufacturerDTO> getByName(@RequestBody String name) {
-        try {
-            return ResponseEntity.ok(manufacturerService.findByName(name));
+            ManufacturerDTO manufacturer = manufacturerService.getOne(id);
+            if(manufacturer != null) return ResponseEntity.ok(manufacturer);
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }
@@ -67,8 +66,17 @@ public class ManufacturerController {
         return manufacturerService.findAll();
     }
 
-    @GetMapping
-    public ResponseEntity<List<ManufacturerDTO>> findByCountry(@RequestBody String country) {
+    @GetMapping(params = "name")
+    public ResponseEntity<ManufacturerDTO> findByName(@RequestParam("name") String name) {
+        try {
+            return ResponseEntity.ok(manufacturerService.findByName(name));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping(params = "country")
+    public ResponseEntity<List<ManufacturerDTO>> findByCountry(@RequestParam("country") String country) {
         try {
             return ResponseEntity.ok(manufacturerService.findByCountry(country));
         } catch (Exception ex) {
@@ -76,9 +84,9 @@ public class ManufacturerController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<ManufacturerDTO>> findByCountryAndRegion(@RequestBody String country,
-                                                                                    String region) {
+    @GetMapping(params = {"country", "region"})
+    public ResponseEntity<List<ManufacturerDTO>> findByCountryAndRegion(@RequestParam("country") String country,
+                                                                        @RequestParam("region") String region) {
         try {
             return ResponseEntity.ok(manufacturerService.findByCountryAndRegion(country, region));
         } catch (Exception ex) {
@@ -86,8 +94,8 @@ public class ManufacturerController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<ManufacturerDTO>> findByCity(@RequestBody String city) {
+    @GetMapping(params = "city")
+    public ResponseEntity<List<ManufacturerDTO>> findByCity(@RequestParam("city") String city) {
         try {
             return ResponseEntity.ok(manufacturerService.findByCity(city));
         } catch (Exception ex) {

@@ -1,6 +1,7 @@
 package com.study.botsomp.service;
 
 import com.study.botsomp.domain.ContactDetails;
+import com.study.botsomp.domain.Manufacturer;
 import com.study.botsomp.dto.ContactDetailsDTO;
 import com.study.botsomp.repository.ContactDetailsRepository;
 import com.study.botsomp.repository.ManufacturerRepository;
@@ -19,7 +20,6 @@ public class ContactDetailsService {
     private final ManufacturerRepository manufacturerRepository;
 
     private final ContactDetailsRepository contactDetailsRepository;
-
 
     private ContactDetails fromDTO(ContactDetailsDTO contactDetailsDTO) {
         if(contactDetailsDTO == null) {
@@ -57,24 +57,37 @@ public class ContactDetailsService {
 
     @Transactional
     public ContactDetailsDTO add(ContactDetailsDTO contactDetailsDTO) {
-        return toDTO(contactDetailsRepository.saveAndFlush(fromDTO(contactDetailsDTO)));
+        if (!contactDetailsRepository.existsById(contactDetailsDTO.getId())) {
+            return toDTO(contactDetailsRepository.saveAndFlush(fromDTO(contactDetailsDTO)));
+        } return null;
     }
 
     @Transactional
     public ContactDetailsDTO update(ContactDetailsDTO contactDetailsDTO) {
-        long id = contactDetailsDTO.getId();
-        if(id > 0L) {
-            contactDetailsDTO.setManufacturer(contactDetailsRepository
-                    .getOne(id)
-                    .getManufacturer()
-                    .getId());
-            return (toDTO(contactDetailsRepository.saveAndFlush(fromDTO(contactDetailsDTO))));
-        } else return null;
+        if (contactDetailsRepository.existsById(contactDetailsDTO.getId())) {
+            return (toDTO(contactDetailsRepository.saveAndFlush(
+                    contactDetailsRepository.getOne(contactDetailsDTO.getId())
+                            .toBuilder()
+                            .firstName(contactDetailsDTO.getFirstName())
+                            .lastName(contactDetailsDTO.getLastName())
+                            .position(contactDetailsDTO.getPosition())
+                            .phone(contactDetailsDTO.getPhone())
+                            .email(contactDetailsDTO.getEmail())
+                            .manufacturer(contactDetailsDTO.getManufacturer() <= 0L
+                                    ? null
+                                    : manufacturerRepository.getOne(contactDetailsDTO.getManufacturer()))
+                            .build())));
+        } return null;
     }
 
     @Transactional
-    public void delete(long id) {
-        contactDetailsRepository.deleteById(id);
+    public boolean delete(long id) {
+        if (contactDetailsRepository.existsById(id)) {
+            Manufacturer manufacturer = contactDetailsRepository.getOne(id).getManufacturer();
+            manufacturer.setContactDetails(null);
+            manufacturerRepository.saveAndFlush(manufacturer);
+            return true;
+        } return false;
     }
 
     public ContactDetailsDTO getOne(long id) {
