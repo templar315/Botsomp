@@ -22,16 +22,16 @@ public class Manufacturer implements Serializable {
     @Column(name = "manufacturer_id")
     private long id;
 
-    @Column(name = "manufacturer_name", nullable = false, unique = true)
+    @Column(name = "manufacturer_name", nullable = false, unique = true, length = 100)
     private String name;
 
-    @Column(name = "manufacturer_country", nullable = false)
+    @Column(name = "manufacturer_country", nullable = false, length = 50)
     private String country;
 
-    @Column(name = "manufacturer_region", nullable = false)
+    @Column(name = "manufacturer_region", nullable = false, length = 100)
     private String region;
 
-    @Column(name = "manufacturer_city", nullable = false)
+    @Column(name = "manufacturer_city", nullable = false, length = 50)
     private String city;
 
     @Column(name = "manufacturer_address", nullable = false)

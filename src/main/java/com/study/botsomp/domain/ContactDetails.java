@@ -21,10 +21,10 @@ public class ContactDetails implements Serializable {
     @Column(name = "contact_details_id")
     private long id;
 
-    @Column(name = "contact_details_first_name", nullable = false)
+    @Column(name = "contact_details_first_name", nullable = false, length = 50)
     private String firstName;
 
-    @Column(name = "contact_details_last_name", nullable = false)
+    @Column(name = "contact_details_last_name", nullable = false, length = 50)
     private String lastName;
 
     @Column(name = "contact_details_position", nullable = false)
@@ -33,7 +33,7 @@ public class ContactDetails implements Serializable {
     @Column(name = "contact_details_phone", nullable = false)
     private long phone;
 
-    @Column(name = "contact_details_email", nullable = false)
+    @Column(name = "contact_details_email", nullable = false, length = 62)
     private String email;
 
     @OneToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})

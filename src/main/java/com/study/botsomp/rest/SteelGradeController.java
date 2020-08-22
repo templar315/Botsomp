@@ -5,6 +5,7 @@ import com.study.botsomp.service.SteelGradeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,8 @@ public class SteelGradeController {
     private final SteelGradeService steelGradeService;
 
     @PostMapping
-    public ResponseEntity<SteelGradeDTO> add(@RequestBody SteelGradeDTO steelGradeDTO) {
+    public ResponseEntity<SteelGradeDTO> add(@Validated(SteelGradeDTO.New.class)
+                                                 @RequestBody SteelGradeDTO steelGradeDTO) {
         try {
             SteelGradeDTO steelGrade = steelGradeService.add(steelGradeDTO);
             if(steelGrade != null) return ResponseEntity.ok(steelGrade);
@@ -28,7 +30,8 @@ public class SteelGradeController {
     }
 
     @PutMapping
-    public ResponseEntity<SteelGradeDTO> update(@RequestBody SteelGradeDTO steelGradeDTO) {
+    public ResponseEntity<SteelGradeDTO> update(@Validated(SteelGradeDTO.Exist.class)
+                                                    @RequestBody SteelGradeDTO steelGradeDTO) {
         try {
             SteelGradeDTO steelGrade = steelGradeService.update(steelGradeDTO);
             if(steelGrade != null) return ResponseEntity.ok(steelGrade);

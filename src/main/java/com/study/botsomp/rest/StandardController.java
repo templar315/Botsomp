@@ -4,7 +4,9 @@ import com.study.botsomp.dto.StandardDTO;
 import com.study.botsomp.service.StandardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +19,7 @@ public class StandardController {
     private final StandardService standardService;
 
     @PostMapping
-    public ResponseEntity<StandardDTO> add(@RequestBody StandardDTO standardDTO) {
+    public ResponseEntity<StandardDTO> add(@Validated(StandardDTO.New.class) @RequestBody StandardDTO standardDTO) {
         try {
             StandardDTO standard = standardService.add(standardDTO);
             if(standard != null) return ResponseEntity.ok(standard);
@@ -28,7 +30,7 @@ public class StandardController {
     }
 
     @PutMapping
-    public ResponseEntity<StandardDTO> update(@RequestBody StandardDTO standardDTO) {
+    public ResponseEntity<StandardDTO> update(@Validated(StandardDTO.Exist.class) @RequestBody StandardDTO standardDTO) {
         try {
             StandardDTO standard = standardService.update(standardDTO);
             if(standard != null) return ResponseEntity.ok(standard);

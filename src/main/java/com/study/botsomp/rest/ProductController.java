@@ -5,6 +5,7 @@ import com.study.botsomp.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public ResponseEntity<ProductDTO> add(@RequestBody ProductDTO productDTO) {
+    public ResponseEntity<ProductDTO> add(@Validated(ProductDTO.New.class) @RequestBody ProductDTO productDTO) {
         try {
             ProductDTO product = productService.add(productDTO);
             if(product != null) return ResponseEntity.ok(product);
@@ -28,7 +29,7 @@ public class ProductController {
     }
 
     @PutMapping
-    public ResponseEntity<ProductDTO> update(@RequestBody ProductDTO productDTO) {
+    public ResponseEntity<ProductDTO> update(@Validated(ProductDTO.Exist.class) @RequestBody ProductDTO productDTO) {
         try {
             ProductDTO product = productService.update(productDTO);
             if(product != null) return ResponseEntity.ok(product);
@@ -85,7 +86,7 @@ public class ProductController {
 
     @GetMapping(params = {"name", "grade"})
     public ResponseEntity<ProductDTO> findByNameAndSteelGrade(@RequestParam("name") String name,
-                                                                    @RequestParam("grade") String grade) {
+                                                              @RequestParam("grade") String grade) {
         try {
             return ResponseEntity.ok(productService.findByNameAndSteelGradeDesignation(name, grade));
         } catch (Exception ex) {
@@ -95,7 +96,7 @@ public class ProductController {
 
     @GetMapping(params = {"type", "grade"})
     public ResponseEntity<List<ProductDTO>> findByTypeAndSteelGrade(@RequestParam("type") String type,
-                                                                           @RequestParam("grade") String grade) {
+                                                                    @RequestParam("grade") String grade) {
         try {
             return ResponseEntity.ok(productService.findByTypeAndSteelGradeDesignation(type, grade));
         } catch (Exception ex) {

@@ -5,6 +5,7 @@ import com.study.botsomp.service.ManufacturerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,8 @@ public class ManufacturerController {
     private final ManufacturerService manufacturerService;
 
     @PostMapping
-    public ResponseEntity<ManufacturerDTO> add(@RequestBody ManufacturerDTO manufacturerDTO) {
+    public ResponseEntity<ManufacturerDTO> add(@Validated(ManufacturerDTO.New.class)
+                                                   @RequestBody ManufacturerDTO manufacturerDTO) {
         try {
             ManufacturerDTO manufacturer = manufacturerService.add(manufacturerDTO);
             if(manufacturer != null) return ResponseEntity.ok(manufacturer);
@@ -28,7 +30,8 @@ public class ManufacturerController {
     }
 
     @PutMapping
-    public ResponseEntity<ManufacturerDTO> update(@RequestBody ManufacturerDTO manufacturerDTO) {
+    public ResponseEntity<ManufacturerDTO> update(@Validated(ManufacturerDTO.Exist.class)
+                                                      @RequestBody ManufacturerDTO manufacturerDTO) {
         try {
             ManufacturerDTO manufacturer = manufacturerService.update(manufacturerDTO);
             if(manufacturer != null) return ResponseEntity.ok(manufacturer);

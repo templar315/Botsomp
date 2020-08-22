@@ -25,7 +25,7 @@ public class Product implements Serializable {
     @Column(name = "product_name", nullable = false)
     private String name;
 
-    @Column(name = "product_type", nullable = false)
+    @Column(name = "product_type", nullable = false, length = 50)
     private String type;
 
     @ManyToMany(mappedBy = "manufacturedProducts", fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})

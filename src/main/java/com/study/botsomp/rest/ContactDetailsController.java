@@ -5,6 +5,7 @@ import com.study.botsomp.service.ContactDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,7 +18,8 @@ public class ContactDetailsController {
     private final ContactDetailsService contactDetailsService;
 
     @PostMapping
-    public ResponseEntity<ContactDetailsDTO> add(@RequestBody ContactDetailsDTO contactDetailsDTO) {
+    public ResponseEntity<ContactDetailsDTO> add(@Validated(ContactDetailsDTO.New.class)
+                                                     @RequestBody ContactDetailsDTO contactDetailsDTO) {
         try {
             ContactDetailsDTO contactDetails = contactDetailsService.add(contactDetailsDTO);
             if(contactDetails != null) return ResponseEntity.ok(contactDetails);
@@ -28,7 +30,8 @@ public class ContactDetailsController {
     }
 
     @PutMapping
-    public ResponseEntity<ContactDetailsDTO> update(@RequestBody ContactDetailsDTO contactDetailsDTO) {
+    public ResponseEntity<ContactDetailsDTO> update(@Validated(ContactDetailsDTO.Exist.class)
+                                                        @RequestBody ContactDetailsDTO contactDetailsDTO) {
         try {
             ContactDetailsDTO contactDetails = contactDetailsService.update(contactDetailsDTO);
             if(contactDetails != null) return ResponseEntity.ok(contactDetails);
