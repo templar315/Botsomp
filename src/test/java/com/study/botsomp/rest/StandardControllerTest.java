@@ -52,39 +52,53 @@ public class StandardControllerTest {
     private ObjectMapper objectMapper;
 
     private StandardDTO standard = StandardDTO.builder()
+            .id(0)
+            .designation("GOST8240-89")
+            .build();
+    private StandardDTO standardOut = StandardDTO.builder()
+            .id(1L)
             .designation("GOST8240-89")
             .build();
 
     private StandardDTO standard2 = StandardDTO.builder()
+            .id(2L)
             .designation("GOST8509-93")
             .build();
 
-    @Before
-    public void setUp() throws Exception {
-        when(standardService.add(standard)).thenReturn(standard);
-        when(standardService.update(standard)).thenReturn(standard);
-        when(standardService.getOne(standard.getId())).thenReturn(standard);
-        when(standardService.findAll()).thenReturn(new ArrayList<>(Arrays.asList(standard, standard2)));
-        when(standardService.delete(standard.getId())).thenReturn(true);
-
-    }
-
     @Test
     public void add() throws Exception {
-        String requestBody = objectMapper.writeValueAsString(standard);
-
+        when(standardService.add(standard)).thenReturn(standardOut);
         mvc.perform(post(STANDARDS)
                 .accept(APPLICATION_JSON)
                 .contentType(APPLICATION_JSON)
-                .content(requestBody))
+                .content(objectMapper.writeValueAsString(standard)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(requestBody));
+                .andExpect(content().string(objectMapper.writeValueAsString(standardOut)));
+    }
+
+    @Test
+    public void addWithId() throws Exception {
+        mvc.perform(post(STANDARDS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(standard2)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void addWithValidationViolation() throws Exception {
+        standard2.setDesignation("");
+        mvc.perform(post(STANDARDS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(standard2)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     public void update() throws Exception {
-        String contactsRequestBody = objectMapper.writeValueAsString(standard);
-
+        when(standardService.update(standard2)).thenReturn(standard2);
+        String contactsRequestBody = objectMapper.writeValueAsString(standard2);
         mvc.perform(put(STANDARDS)
                 .accept(APPLICATION_JSON)
                 .contentType(APPLICATION_JSON)
@@ -94,25 +108,56 @@ public class StandardControllerTest {
     }
 
     @Test
+    public void updateNonExistEntity() throws Exception {
+        when(standardService.update(standard2)).thenReturn(null);
+        mvc.perform(put(STANDARDS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(standard2)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void updateWithoutId() throws Exception {
+        mvc.perform(put(STANDARDS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(standard)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void updateWithValidationViolation() throws Exception {
+        standard2.setDesignation("");
+        mvc.perform(put(STANDARDS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(standard2)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void delete() throws Exception {
+        when(standardService.delete(standard.getId())).thenReturn(true);
         mvc.perform(MockMvcRequestBuilders.delete(STANDARDS + "/" + standard.getId()))
                 .andExpect(status().isOk());
-
     }
 
     @Test
     public void getOne() throws Exception {
+        when(standardService.getOne(standard.getId())).thenReturn(standard);
         mvc.perform(get(STANDARDS + "/" + standard.getId()))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void findAll() throws Exception {
+        when(standardService.findAll()).thenReturn(new ArrayList<>(Arrays.asList(standardOut, standard2)));
         mvc.perform(get(STANDARDS)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().string(objectMapper
-                        .writeValueAsString(Arrays.asList(standard, standard2))));
+                        .writeValueAsString(Arrays.asList(standardOut, standard2))));
     }
 
 }

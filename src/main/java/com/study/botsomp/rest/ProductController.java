@@ -33,7 +33,7 @@ public class ProductController {
         try {
             ProductDTO product = productService.update(productDTO);
             if(product != null) return ResponseEntity.ok(product);
-            else return ResponseEntity.badRequest().build();
+            else return ResponseEntity.notFound().build();
         } catch (Exception ex) {
             return ResponseEntity.badRequest().build();
         }

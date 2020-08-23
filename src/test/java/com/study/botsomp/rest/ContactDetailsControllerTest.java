@@ -53,12 +53,23 @@ public class ContactDetailsControllerTest {
 
     private ContactDetailsDTO contactDetails = ContactDetailsDTO
             .builder()
+            .id(0L)
+            .firstName("Vladimir")
+            .lastName("Drobyshev")
+            .position("Director of Commercial Affairs")
+            .phone(380998541212L)
+            .email("azovstal@com.ua")
+            .manufacturer(1L)
+            .build();
+    private ContactDetailsDTO contactDetailsOut = ContactDetailsDTO
+            .builder()
             .id(2L)
             .firstName("Vladimir")
             .lastName("Drobyshev")
             .position("Director of Commercial Affairs")
             .phone(380998541212L)
             .email("azovstal@com.ua")
+            .manufacturer(1L)
             .build();
 
     private ContactDetailsDTO contactDetails2 = ContactDetailsDTO
@@ -69,62 +80,104 @@ public class ContactDetailsControllerTest {
             .position("Director of Commercial Affairs")
             .phone(380953256855L)
             .email("dmz@com.ua")
+            .manufacturer(2L)
             .build();
-
-    @Before
-    public void setUp() throws Exception {
-        when(contactDetailsService.findAll())
-                .thenReturn(new ArrayList<>(Arrays.asList(contactDetails, contactDetails2)));
-        when(contactDetailsService.add(contactDetails)).thenReturn(contactDetails);
-        when(contactDetailsService.update(contactDetails)).thenReturn(contactDetails);
-        when(contactDetailsService.getOne(contactDetails.getId())).thenReturn(contactDetails);
-        when(contactDetailsService.delete(contactDetails.getId())).thenReturn(true);
-    }
 
     @Test
     public void add() throws Exception {
-        String contactsRequestBody = objectMapper.writeValueAsString(contactDetails);
-
+        when(contactDetailsService.add(contactDetails)).thenReturn(contactDetailsOut);
         mvc.perform(post(CONTACT_DETAILS)
                 .accept(APPLICATION_JSON)
                 .contentType(APPLICATION_JSON)
-                .content(contactsRequestBody))
+                .content(objectMapper.writeValueAsString(contactDetails)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(contactsRequestBody));
+                .andExpect(content().string(objectMapper.writeValueAsString(contactDetailsOut)));
+    }
+
+    @Test
+    public void addWithId() throws Exception {
+        mvc.perform(post(CONTACT_DETAILS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(contactDetails2)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void addWithValidationViolation() throws Exception {
+        contactDetails.setEmail(null);
+        mvc.perform(post(CONTACT_DETAILS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(contactDetails)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     public void update() throws Exception {
-        String contactsRequestBody = objectMapper.writeValueAsString(contactDetails);
-
+        when(contactDetailsService.update(contactDetails2)).thenReturn(contactDetails2);
         mvc.perform(put(CONTACT_DETAILS)
                 .accept(APPLICATION_JSON)
                 .contentType(APPLICATION_JSON)
-                .content(contactsRequestBody))
+                .content(objectMapper.writeValueAsString(contactDetails2)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(contactsRequestBody));
+                .andExpect(content().string(objectMapper.writeValueAsString(contactDetails2)));
 
     }
 
     @Test
+    public void updateWithoutId() throws Exception {
+        mvc.perform(put(CONTACT_DETAILS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(contactDetails)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void updateNonExistEntity() throws Exception {
+        when(contactDetailsService.update(contactDetails2)).thenReturn(null);
+        mvc.perform(put(CONTACT_DETAILS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(contactDetails2)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void updateWithValidationViolation() throws Exception {
+        contactDetails2.setLastName("");
+        mvc.perform(put(CONTACT_DETAILS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(contactDetails2)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void delete() throws Exception {
-        mvc.perform(MockMvcRequestBuilders.delete(CONTACT_DETAILS + "/" + contactDetails.getId()))
+        when(contactDetailsService.delete(contactDetailsOut.getId())).thenReturn(true);
+        mvc.perform(MockMvcRequestBuilders.delete(CONTACT_DETAILS + "/" + contactDetailsOut.getId()))
                 .andExpect(status().isOk());
 
     }
 
     @Test
     public void getOne() throws Exception {
-        mvc.perform(get(CONTACT_DETAILS + "/" + contactDetails.getId()))
-                .andExpect(status().isOk());
+        when(contactDetailsService.getOne(contactDetailsOut.getId())).thenReturn(contactDetailsOut);
+        mvc.perform(get(CONTACT_DETAILS + "/" + contactDetailsOut.getId()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(objectMapper.writeValueAsString(contactDetailsOut)));
     }
 
     @Test
     public void findAll() throws Exception {
+        when(contactDetailsService.findAll())
+                .thenReturn(new ArrayList<>(Arrays.asList(contactDetailsOut, contactDetails2)));
         mvc.perform(get(CONTACT_DETAILS)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().string(objectMapper
-                        .writeValueAsString(Arrays.asList(contactDetails, contactDetails2))));
+                        .writeValueAsString(Arrays.asList(contactDetailsOut, contactDetails2))));
     }
 }

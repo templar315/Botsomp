@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ComponentScan
+@ComponentScan("com.study.botsomp.service")
 public class ProductServiceTest extends BaseDomainTest {
 
     @Autowired

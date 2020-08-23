@@ -23,8 +23,8 @@ public class ManufacturerDTO implements Serializable {
     public interface Exist {
     }
 
-    @NegativeOrZero(groups = {ContactDetailsDTO.New.class}, message = "Id field is positive")
-    @Positive(groups = {ContactDetailsDTO.Exist.class}, message = "Id field is negative or zero")
+    @NegativeOrZero(groups = {New.class}, message = "Id field is positive")
+    @Positive(groups = {Exist.class}, message = "Id field is negative or zero")
     private long id;
 
     @NotNull(groups = {New.class, Exist.class}, message = "Name field is null")

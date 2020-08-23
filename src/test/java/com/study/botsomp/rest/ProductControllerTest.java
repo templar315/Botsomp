@@ -52,6 +52,15 @@ public class ProductControllerTest {
     private ObjectMapper objectMapper;
 
     private ProductDTO product = ProductDTO.builder()
+            .id(0)
+            .name("Steel hot-rolled channel #5")
+            .type("Channel bars")
+            .steelGrade("St5sp")
+            .standard("GOST8240-89")
+            .build();
+
+    private ProductDTO productOut = ProductDTO.builder()
+            .id(1L)
             .name("Steel hot-rolled channel #5")
             .type("Channel bars")
             .steelGrade("St5sp")
@@ -59,70 +68,100 @@ public class ProductControllerTest {
             .build();
 
     private ProductDTO product2 = ProductDTO.builder()
+            .id(2L)
             .name("Steel hot-rolled channel #5")
             .type("Channel bars")
             .steelGrade("St3sp")
             .standard("GOST8240-89")
             .build();
 
-    @Before
-    public void setUp() throws Exception {
-        when(productService.add(product)).thenReturn(product);
-        when(productService.update(product)).thenReturn(product);
-        when(productService.getOne(product.getId())).thenReturn(product);
-        when(productService.delete(product.getId())).thenReturn(true);
-        when(productService.findAll()).thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
-        when(productService.findByName(product.getName()))
-                .thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
-        when(productService.findByType(product.getType()))
-                .thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
-        when(productService.findByNameAndSteelGradeDesignation(product.getName(), product.getSteelGrade()))
-                .thenReturn(product);
-        when(productService.findByTypeAndSteelGradeDesignation(product.getType(), product.getSteelGrade()))
-                .thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
-        when(productService.findBySteelGradeAndProductStandard(product.getSteelGrade(), product.getStandard()))
-                .thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
-    }
-
     @Test
     public void add() throws Exception {
-        String requestBody = objectMapper.writeValueAsString(product);
-
+        when(productService.add(product)).thenReturn(productOut);
         mvc.perform(post(PRODUCTS)
                 .accept(APPLICATION_JSON)
                 .contentType(APPLICATION_JSON)
-                .content(requestBody))
+                .content(objectMapper.writeValueAsString(product)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(requestBody));
+                .andExpect(content().string(objectMapper.writeValueAsString(productOut)));
+    }
+
+    @Test
+    public void addWithId() throws Exception {
+        mvc.perform(post(PRODUCTS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(product2)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void addWithValidationViolation() throws Exception {
+        product2.setSteelGrade("");
+        mvc.perform(post(PRODUCTS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(product2)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     public void update() throws Exception {
-        String contactsRequestBody = objectMapper.writeValueAsString(product);
-
+        when(productService.update(product2)).thenReturn(product2);
         mvc.perform(put(PRODUCTS)
                 .accept(APPLICATION_JSON)
                 .contentType(APPLICATION_JSON)
-                .content(contactsRequestBody))
+                .content(objectMapper.writeValueAsString(product2)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(contactsRequestBody));
+                .andExpect(content().string(objectMapper.writeValueAsString(product2)));
+    }
+
+    @Test
+    public void updateNonExistEntity() throws Exception {
+        when(productService.update(product2)).thenReturn(null);
+        mvc.perform(put(PRODUCTS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(product2)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void updateWithoutId() throws Exception {
+        mvc.perform(put(PRODUCTS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(product)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void updateWithValidationViolation() throws Exception {
+        product2.setType("");
+        mvc.perform(put(PRODUCTS)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(product2)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     public void delete() throws Exception {
+        when(productService.delete(product.getId())).thenReturn(true);
         mvc.perform(MockMvcRequestBuilders.delete(PRODUCTS + "/" + product.getId()))
                 .andExpect(status().isOk());
-
     }
 
     @Test
     public void getOne() throws Exception {
+        when(productService.getOne(product.getId())).thenReturn(product);
         mvc.perform(get(PRODUCTS + "/" + product.getId()))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void findAll() throws Exception {
+        when(productService.findAll()).thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
         mvc.perform(get(PRODUCTS)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -132,6 +171,8 @@ public class ProductControllerTest {
 
     @Test
     public void findByName() throws Exception {
+        when(productService.findByName(product.getName()))
+                .thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
         mvc.perform(get(PRODUCTS)
                 .accept(APPLICATION_JSON)
                 .param("name", product.getName()))
@@ -142,6 +183,8 @@ public class ProductControllerTest {
 
     @Test
     public void findByType() throws Exception {
+        when(productService.findByType(product.getType()))
+                .thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
         mvc.perform(get(PRODUCTS)
                 .accept(APPLICATION_JSON)
                 .param("type", product.getType()))
@@ -152,6 +195,8 @@ public class ProductControllerTest {
 
     @Test
     public void findByNameAndSteelGrade() throws Exception {
+        when(productService.findByNameAndSteelGradeDesignation(product.getName(), product.getSteelGrade()))
+                .thenReturn(product);
         mvc.perform(get(PRODUCTS)
                 .accept(APPLICATION_JSON)
                 .param("name", product.getName())
@@ -163,6 +208,8 @@ public class ProductControllerTest {
 
     @Test
     public void findByTypeAndSteelGrade() throws Exception {
+        when(productService.findByTypeAndSteelGradeDesignation(product.getType(), product.getSteelGrade()))
+                .thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
         mvc.perform(get(PRODUCTS)
                 .accept(APPLICATION_JSON)
                 .param("type", product.getType())
@@ -174,6 +221,8 @@ public class ProductControllerTest {
 
     @Test
     public void findBySteelGradeAndStandard() throws Exception {
+        when(productService.findBySteelGradeAndProductStandard(product.getSteelGrade(), product.getStandard()))
+                .thenReturn(new ArrayList<>(Arrays.asList(product, product2)));
         mvc.perform(get(PRODUCTS)
                 .accept(APPLICATION_JSON)
                 .param("grade", product.getSteelGrade())

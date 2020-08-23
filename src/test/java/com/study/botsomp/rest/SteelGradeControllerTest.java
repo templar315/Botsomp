@@ -56,36 +56,52 @@ public class SteelGradeControllerTest {
             .gradeStandard("GOST380-2005")
             .build();
 
+    SteelGradeDTO steelGradeOut = SteelGradeDTO.builder()
+            .id(1L)
+            .designation("St5sp")
+            .gradeStandard("GOST380-2005")
+            .build();
+
     SteelGradeDTO steelGrade2 = SteelGradeDTO.builder()
+            .id(2L)
             .designation("St3sp")
             .gradeStandard("GOST380-2005")
             .build();
 
-    @Before
-    public void setUp() throws Exception {
-        when(steelGradeService.getOne(steelGrade.getId())).thenReturn(steelGrade);
-        when(steelGradeService.add(steelGrade)).thenReturn(steelGrade);
-        when(steelGradeService.update(steelGrade)).thenReturn(steelGrade);
-        when(steelGradeService.findAll()).thenReturn(new ArrayList<>(Arrays.asList(steelGrade, steelGrade2)));
-        when(steelGradeService.delete(steelGrade.getId())).thenReturn(true);
-    }
-
     @Test
     public void add() throws Exception {
-        String requestBody = objectMapper.writeValueAsString(steelGrade);
-
+        when(steelGradeService.add(steelGrade)).thenReturn(steelGradeOut);
         mvc.perform(post(STEEL_GRADES)
                 .accept(APPLICATION_JSON)
                 .contentType(APPLICATION_JSON)
-                .content(requestBody))
+                .content(objectMapper.writeValueAsString(steelGrade)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(requestBody));
+                .andExpect(content().string(objectMapper.writeValueAsString(steelGradeOut)));
+    }
+
+    @Test
+    public void addWithId() throws Exception {
+        mvc.perform(post(STEEL_GRADES)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(steelGrade2)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void addWithValidationViolation() throws Exception {
+        steelGrade.setDesignation("");
+        mvc.perform(post(STEEL_GRADES)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(steelGrade)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     public void update() throws Exception {
-        String contactsRequestBody = objectMapper.writeValueAsString(steelGrade);
-
+        when(steelGradeService.update(steelGrade2)).thenReturn(steelGrade2);
+        String contactsRequestBody = objectMapper.writeValueAsString(steelGrade2);
         mvc.perform(put(STEEL_GRADES)
                 .accept(APPLICATION_JSON)
                 .contentType(APPLICATION_JSON)
@@ -95,25 +111,56 @@ public class SteelGradeControllerTest {
     }
 
     @Test
+    public void updateNonExistEntity() throws Exception {
+        when(steelGradeService.update(steelGrade2)).thenReturn(null);
+        mvc.perform(put(STEEL_GRADES)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(steelGrade2)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void updateWithoutId() throws Exception {
+        mvc.perform(put(STEEL_GRADES)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(steelGrade)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void updateWithValidationViolation() throws Exception {
+        steelGrade2.setDesignation("");
+        mvc.perform(put(STEEL_GRADES)
+                .accept(APPLICATION_JSON)
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(steelGrade2)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void delete() throws Exception {
+        when(steelGradeService.delete(steelGrade.getId())).thenReturn(true);
         mvc.perform(MockMvcRequestBuilders.delete(STEEL_GRADES + "/" + steelGrade.getId()))
                 .andExpect(status().isOk());
-
     }
 
     @Test
     public void getOne() throws Exception {
+        when(steelGradeService.getOne(steelGrade.getId())).thenReturn(steelGrade);
         mvc.perform(get(STEEL_GRADES + "/" + steelGrade.getId()))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void findAll() throws Exception {
+        when(steelGradeService.findAll()).thenReturn(new ArrayList<>(Arrays.asList(steelGradeOut, steelGrade2)));
         mvc.perform(get(STEEL_GRADES)
                 .accept(APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().string(objectMapper
-                        .writeValueAsString(Arrays.asList(steelGrade, steelGrade2))));
+                        .writeValueAsString(Arrays.asList(steelGradeOut, steelGrade2))));
     }
 
 }
